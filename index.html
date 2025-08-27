@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Advanced AI PDF Generator</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #e0e7ff;
+      --secondary: #f8fafc;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --light: #ffffff;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --radius: 12px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--light);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 30px 25px;
+      text-align: center;
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+      font-weight: 300;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .form-container {
+      padding: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .label-icon {
+      color: var(--primary);
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      transition: var(--transition);
+      background: var(--secondary);
+      font-family: "Inter", sans-serif;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+      background: var(--light);
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .input-hint {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.06);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.05);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .spinner {
+      border: 4px solid var(--primary-light);
+      border-left: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading p {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-light);
+      font-size: 14px;
+      background: var(--secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer p {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        border-radius: 0;
+      }
+
+      body {
+        padding: 0;
+      }
+      
+      .form-container {
+        padding: 20px;
+      }
+      
+      header {
+        padding: 25px 20px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-file-pdf"></i> AI Powered PDF Generator</h1>
+      <p class="subtitle">Create beautiful, organized PDF documents with advanced AI technology</p>
+    </header>
+
+    <div class="form-container">
+      <div class="form-group">
+        <label for="pdfName">
+          <i class="fas fa-file-signature label-icon"></i> PDF File Name
+        </label>
+        <input
+          type="text"
+          id="pdfName"
+          placeholder="name for pdf"
+         
+          
+        />
+        <p class="input-hint">Make sure to include .pdf at the end of your filename</p>
+      </div>
+
+      <div class="form-group">
+        <label for="description">
+          <i class="fas fa-align-left label-icon"></i> Content Description
+        </label>
+        <textarea
+          id="description"
+          placeholder="Describe what you want in the PDF."
+        ></textarea>
+        <p class="input-hint">Be as detailed as possible for better results</p>
+      </div>
+
+      <button onclick="generateAIPDF()">
+        <i class="fas fa-magic"></i> Generate AI PDF
+      </button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Generating your PDF with AI... This may take a moment.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><i class="fas fa-bolt"></i> Powered by Groq AI • PDFs generated in real-time</p>
+  </div>
+
+  <script>
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+
+    // Helper for wrapping text into lines by font and max width
+    function wrapText(text, font, fontSize, maxWidth) {
+      const words = text.split(' ');
+      let lines = [];
+      let line = '';
+
+      words.forEach(word => {
+        const testLine = line.length ? line + ' ' + word : word;
+        const width = font.widthOfTextAtSize(testLine, fontSize);
+        if (width > maxWidth && line.length > 0) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      });
+      if (line.length) lines.push(line);
+      return lines;
+    }
+
+    async function generateAIPDF() {
+      const fileName =
+        document.getElementById('pdfName').value.trim() || 'AI_Report.pdf';
+      const description = document.getElementById('description').value.trim();
+
+      if (!description) {
+        alert('Please enter a description of the content you want to generate.');
+        return;
+      }
+
+      const loadingEl = document.getElementById('loading');
+      const buttonEl = document.querySelector('button');
+      const originalButtonText = buttonEl.innerHTML;
+      
+      loadingEl.style.display = 'block';
+      buttonEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+      buttonEl.disabled = true;
+
+      try {
+        // Call Groq API (assuming valid key and URL)
+        const response = await fetch(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization:
+                'Bearer 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',
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-8b-instant',
+              messages: [
+                {
+                  role: 'system',
+                  content:
+                    'You are a professional content writer that creates well-structured, informative documents. Format the response with clear headings, subheadings, and bullet points where appropriate. Make sure the content is comprehensive and well-organized.',
+                },
+                {
+                  role: 'user',
+                  content: `Create a detailed, well-structured document about: ${description}. Use clear section headings, subheadings, and bullet points. Ensure the content flows logically from introduction to conclusion.`,
+                },
+              ],
+              max_tokens: 1500,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || 'Failed to generate content');
+        }
+
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+
+        const pdfDoc = await PDFDocument.create();
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+        const pageHeight = 842; // A4 height in pt
+        const pageWidth = 595; // A4 width in pt
+        const marginLeft = 50;
+        const marginRight = 50;
+        const maxTextWidth = pageWidth - marginLeft - marginRight;
+        const fontSize = 12;
+        const lineHeight = fontSize * 1.4;
+
+        let page = pdfDoc.addPage([pageWidth, pageHeight]);
+        let y = pageHeight - 70; // start a bit lower to avoid title
+
+        // Draw title
+        const title = fileName.replace('.pdf', '');
+        page.drawText(title, {
+          x: marginLeft,
+          y: y,
+          size: 20,
+          font: boldFont,
+          color: rgb(0, 0, 0.8),
+        });
+        y -= 30;
+
+        // Draw horizontal line
+        page.drawLine({
+          start: { x: marginLeft, y: y },
+          end: { x: pageWidth - marginRight, y: y },
+          thickness: 1,
+          color: rgb(0.8, 0.8, 0.8),
+        });
+        y -= 30;
+
+        // Render each line with formatting and wrapping
+        const lines = content.split('\n');
+
+        for (let rawLine of lines) {
+          const line = rawLine.trim();
+
+          if (!line) {
+            y -= lineHeight; // add spacing for empty lines
+            continue;
+          }
+
+          // Determine text style by prefix
+          let font = regularFont;
+          let size = fontSize;
+          let color = rgb(0, 0, 0);
+          let indent = 0;
+          let wrappedLines = [];
+
+          if (line.startsWith('# ')) {
+            font = boldFont;
+            size = 18;
+            color = rgb(0.2, 0.2, 0.6);
+            wrappedLines = wrapText(line.substring(2), font, size, maxTextWidth);
+          } else if (line.startsWith('## ')) {
+            font = boldFont;
+            size = 16;
+            color = rgb(0.3, 0.3, 0.7);
+            wrappedLines = wrapText(line.substring(3), font, size, maxTextWidth);
+          } else if (line.startsWith('### ')) {
+            font = boldFont;
+            size = 14;
+            color = rgb(0.4, 0.4, 0.8);
+            wrappedLines = wrapText(line.substring(4), font, size, maxTextWidth);
+          } else if (line.startsWith('- ')) {
+            font = regularFont;
+            size = fontSize;
+            color = rgb(0, 0, 0);
+            indent = 18; // for bullet indentation
+            wrappedLines = wrapText(line.substring(2), font, size, maxTextWidth - indent);
+          } else {
+            font = regularFont;
+            size = fontSize;
+            color = rgb(0, 0, 0);
+            wrappedLines = wrapText(line, font, size, maxTextWidth);
+          }
+
+          for (let i = 0; i < wrappedLines.length; i++) {
+            if (y < 50) {
+              // add new page if out of space
+              page = pdfDoc.addPage([pageWidth, pageHeight]);
+              y = pageHeight - 50;
+            }
+
+            const drawX = marginLeft + (i === 0 ? indent : 0); // only indent first line of bullets
+
+            page.drawText(wrappedLines[i], {
+              x: drawX,
+              y: y,
+              size,
+              font,
+              color,
+            });
+
+            y -= lineHeight;
+          }
+
+          y -= lineHeight * 0.5; // extra spacing after paragraphs
+        }
+
+        // Add page numbers footer
+        const pages = pdfDoc.getPages();
+        for (let i = 0; i < pages.length; i++) {
+          const p = pages[i];
+          p.drawText(`Page ${i + 1} of ${pages.length}`, {
+            x: pageWidth - marginRight - 80,
+            y: 30,
+            size: 10,
+            font: regularFont,
+            color: rgb(0.5, 0.5, 0.5),
+          });
+        }
+
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName.endsWith('.pdf') ? fileName : fileName + '.pdf';
+        link.click();
+      } catch (err) {
+        alert('Error generating PDF: ' + err.message);
+        console.error(err);
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+        buttonEl.innerHTML = originalButtonText;
+        buttonEl.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
